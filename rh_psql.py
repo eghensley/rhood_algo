@@ -334,8 +334,8 @@ def floor_dt(dt, delta):
 
 
 def update():
-#    next_update = floor_dt(datetime.now(), timedelta(minutes=10))
-    next_update = floor_dt(datetime.now(), timedelta(days=1))
+    next_update = floor_dt(datetime.now(), timedelta(minutes=10))
+#    next_update = floor_dt(datetime.now(), timedelta(days=1))
     dt_until_update = next_update - datetime.now()
     seconds_before_update = dt_until_update.total_seconds()
     tm.sleep(seconds_before_update)
@@ -346,8 +346,8 @@ def update():
             dividends(full_update = True)
         else:
             dividends()
-        inday_prices()
         ind_perfs()
+    inday_prices()
 #    if next_update.hour >= 9 and next_update.hour <= 
     
     
