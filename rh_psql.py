@@ -298,9 +298,15 @@ def update():
             dividends(full_update = True)
         else:
             dividends()
-    inday_prices()
+        inday_prices()
+#    if next_update.hour >= 9 and next_update.hour <= 
     
-if __name__ == '__main__':
-    while True:
-        update()
-#    dividends()
+    
+#if __name__ == '__main__':
+#    while True:
+#        update()
+##    dividends()
+    
+    
+    
+#'https://www.alphavantage.co/query?function=SECTOR&apikey=demo'
