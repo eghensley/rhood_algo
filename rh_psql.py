@@ -11,15 +11,19 @@ sys.path.insert(1, os.path.join(cur_path, 'lib', 'python3.7', 'site-packages'))
 
 import requests
 import pandas as pd
-from _connections import db_connection
+from _connections import db_connection, openfigi_key
 from pg_tables import create_tables
 from datetime import datetime, timedelta
 import robin_stocks.helper as helper
 import robin_stocks.urls as urls
 import time as tm
 from progress_bar import progress
+import numpy as np
 
 #PSQL = db_connection('psql')
+#for script in create_tables['ind_perf']:    
+#    PSQL.client.execute(script)
+#    PSQL.client.execute("commit;")
 #for script in create_tables['dividends']:    
 #    PSQL.client.execute(script)
 #    PSQL.client.execute("commit;")
@@ -160,6 +164,19 @@ def det_cur_divs(psql):
     return(current_, nxt)
 
 
+def det_cur_perf(psql):
+#    psql = PSQL
+    _data = pg_query(psql.client, 'select ind_perf_id, date from portfolio.ind_perf')
+    if len(_data) > 0:
+        _data.rename(columns = {0:'idx', 1: 'dt'}, inplace = True)
+        current_ = _data['dt'].values[0]
+        nxt = max(_data['idx'].values) + 1
+    else:
+        current_ = {}
+        nxt = 0
+    return(current_, nxt)
+
+
 def inday_prices():
     print(' ~~ Intra Day Prices ~~ ')
 
@@ -281,13 +298,44 @@ def dividends(full_update = False):
             declared_date = None
             amount = None
             
-            
+ 
+def ind_perfs():    
+    PSQL = db_connection('psql')  
+    current, next_id = det_cur_perf(PSQL)
+      
+    url = 'https://www.alphavantage.co/query?function=SECTOR&apikey=%s' % openfigi_key
+    req = requests.request('GET', url)
+    #if req.status_code == 404:
+    #    continue
+    data = req.json()
+    day_perf = data['Rank B: 1 Day Performance']
+    date = datetime.strptime(data['Meta Data']['Last Refreshed'].replace(' ET', ''), '%H:%M %p %m/%d/%Y')
+    if np.datetime64(date) != current:  
+        communication = float(day_perf['Communication Services'].replace('%', ''))
+        discretionary = float(day_perf['Consumer Discretionary'].replace('%', ''))
+        staples = float(day_perf['Consumer Staples'].replace('%', ''))
+        energy = float(day_perf['Energy'].replace('%', ''))
+        financial = float(day_perf['Financials'].replace('%', ''))
+        health = float(day_perf['Health Care'].replace('%', ''))
+        industrial = float(day_perf['Industrials'].replace('%', ''))
+        it = float(day_perf['Information Technology'].replace('%', ''))
+        material = float(day_perf['Materials'].replace('%', ''))
+        realestate = float(day_perf['Real Estate'].replace('%', ''))
+        utilities = float(day_perf['Utilities'].replace('%', ''))
+        
+        script = "INSERT INTO portfolio.ind_perf(\
+        	ind_perf_id, date, communication, discretionary, staples, energy, financial, health, industrial, it, material, realestate, utilities)\
+        	VALUES (%i, '%s', %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);" % (next_id, date, communication, discretionary, staples, energy, financial, health, industrial, it, material, realestate, utilities)
+        pg_insert(PSQL.client, script)
+
+           
 def floor_dt(dt, delta):
     return dt + (datetime.min - dt) % delta
 
 
 def update():
-    next_update = floor_dt(datetime.now(), timedelta(minutes=10))
+#    next_update = floor_dt(datetime.now(), timedelta(minutes=10))
+    next_update = floor_dt(datetime.now(), timedelta(days=1))
     dt_until_update = next_update - datetime.now()
     seconds_before_update = dt_until_update.total_seconds()
     tm.sleep(seconds_before_update)
@@ -299,14 +347,17 @@ def update():
         else:
             dividends()
         inday_prices()
+        ind_perfs()
 #    if next_update.hour >= 9 and next_update.hour <= 
     
     
-#if __name__ == '__main__':
-#    while True:
-#        update()
+if __name__ == '__main__':
+    while True:
+        update()
 ##    dividends()
     
     
-    
-#'https://www.alphavantage.co/query?function=SECTOR&apikey=demo'
+
+
+
+

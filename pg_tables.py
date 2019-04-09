@@ -107,9 +107,37 @@ dividends = ['DROP TABLE IF EXISTS portfolio.dividends;',
             TABLESPACE pg_default;',
             ]
 
+ind_perf = ['DROP TABLE IF EXISTS portfolio.ind_perf;',
+           
+           'CREATE TABLE portfolio.ind_perf \
+            (ind_perf_id bigint NOT NULL, \
+            date timestamp NOT NULL, \
+            communication float NOT NULL, \
+            discretionary float NOT NULL, \
+            staples float NOT NULL, \
+            energy float NOT NULL, \
+            financial float NOT NULL, \
+            health float NOT NULL, \
+            industrial float NOT NULL, \
+            it float NOT NULL, \
+            material float NOT NULL, \
+            realestate float NOT NULL, \
+            utilities float NOT NULL, \
+            CONSTRAINT ind_perf_uq UNIQUE (date), \
+            CONSTRAINT ind_perf_pkey PRIMARY KEY (ind_perf_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ind_perf_idx;',
+            'CREATE INDEX ind_perf_idx \
+            ON portfolio.ind_perf USING btree \
+            (ind_perf_id) \
+            TABLESPACE pg_default;',
+            ]
     
 create_tables = {}
 create_tables['stocks'] = stocks
 create_tables['day_prices'] = day_prices
 create_tables['inday_prices'] = inday_prices
 create_tables['dividends'] = dividends
+create_tables['ind_perf'] = ind_perf
