@@ -17,6 +17,7 @@ from datetime import datetime, timedelta
 import robin_stocks.helper as helper
 import robin_stocks.urls as urls
 import time as tm
+from progress_bar import progress
 
 #PSQL = db_connection('psql')
 #for script in create_tables['dividends']:    
@@ -160,11 +161,14 @@ def det_cur_divs(psql):
 
 
 def inday_prices():
+    print(' ~~ Intra Day Prices ~~ ')
+
     PSQL = db_connection('psql')
     current, next_id = det_cur_day_prices(PSQL, 'inday')
     id_sym = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
-    for idx, sym in id_sym.values:
-        print(sym)
+    total_stocks = len(id_sym)
+    for stock_num, (idx, sym) in enumerate(id_sym.values):
+        progress(stock_num, total_stocks, status = sym)
         symbols = helper.inputs_to_set(sym)
         url = urls.historicals()
         payload = { 'symbols' : ','.join(symbols),
@@ -193,11 +197,14 @@ def inday_prices():
             
             
 def day_prices():
+    
+    print(' ~~ Full Day Prices ~~ ')
     PSQL = db_connection('psql')
     current, next_id = det_cur_day_prices(PSQL, 'day')
     id_sym = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
-    for idx, sym in id_sym.values:
-        print(sym)
+    total_stocks = len(id_sym)
+    for stock_num, (idx, sym) in enumerate(id_sym.values):
+        progress(stock_num, total_stocks, status = sym)
         symbols = helper.inputs_to_set(sym)
         url = urls.historicals()
         payload = { 'symbols' : ','.join(symbols),
@@ -227,19 +234,21 @@ def day_prices():
 
 #Use the /ref-data/symbols endpoint to find the symbols that we support. 
 #id_sym.loc[id_sym[0] == 'c850bc5d-676b-47d3-8f47-d0ce7676ccdf']
-def dividends():
+def dividends(full_update = False):
+    print(' ~~ Dividends ~~ ')
+
     PSQL = db_connection('psql')
-    update = False
     id_sym = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')          
     current, next_id = det_cur_divs(PSQL)
-    for idx, sym in id_sym.values:
-        print(sym)
-        if not update and idx in current.keys():
+    total_stocks = len(id_sym)
+    for stock_num, (idx, sym) in enumerate(id_sym.values):
+        progress(stock_num, total_stocks, status = sym)
+
+        if not full_update and idx in current.keys():
             continue
         url = 'https://api.iextrading.com/1.0/stock/%s/dividends/5y' % (sym)        
         req = requests.request('GET', url)
         if req.status_code == 404:
-            print('Denied')
             continue
         data = req.json()
         if len(data) == 0:
@@ -282,9 +291,13 @@ def update():
     dt_until_update = next_update - datetime.now()
     seconds_before_update = dt_until_update.total_seconds()
     tm.sleep(seconds_before_update)
+    print('BEGINNING UPDATE')
     if next_update.hour == 0 and next_update.minute == 0:
         day_prices()
-        dividends()
+        if next_update.day == 1 or next_update.day == 15:
+            dividends(full_update = True)
+        else:
+            dividends()
     inday_prices()
     
 if __name__ == '__main__':
