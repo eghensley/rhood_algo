@@ -265,6 +265,7 @@ def dividends():
                     VALUES (%i, '%s', '%s', '%s', '%s', %s, %.2f);" % (next_id, idx, ex_date, payment_date, record_date, declared_date, amount)
             pg_insert(PSQL.client, script)
             next_id += 1
+            current[idx] = ex_date
             ex_date = None
             payment_date = None
             record_date = None
@@ -287,6 +288,6 @@ def update():
     inday_prices()
     
 if __name__ == '__main__':
-#    while True:
-#        update()
-    dividends()
+    while True:
+        update()
+#    dividends()
