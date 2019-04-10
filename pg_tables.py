@@ -134,10 +134,52 @@ ind_perf = ['DROP TABLE IF EXISTS portfolio.ind_perf;',
             (ind_perf_id) \
             TABLESPACE pg_default;',
             ]
-    
+ 
+
+financials = ['DROP TABLE IF EXISTS portfolio.financials;',
+           
+           'CREATE TABLE portfolio.financials \
+            (financials_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            report_date timestamp NOT NULL, \
+            gross_profit bigint, \
+            cost_revenue bigint, \
+            operating_revenue bigint, \
+            total_revenue bigint, \
+            operating_income bigint, \
+            net_income bigint, \
+            r_d bigint, \
+            operating_expense bigint, \
+            current_assets bigint, \
+            total_assets bigint, \
+            total_liabilities bigint, \
+            current_cash bigint, \
+            current_debt bigint, \
+            total_cash bigint, \
+            total_debt bigint, \
+            shareholder_equity bigint, \
+            cash_change bigint, \
+            cash_flow bigint, \
+            operating_gl bigint, \
+            CONSTRAINT financials_uq UNIQUE (report_date, rh_id), \
+            CONSTRAINT financials_pkey PRIMARY KEY (financials_id), \
+            CONSTRAINT financials_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.financials_idx;',
+            'CREATE INDEX financials_idx \
+            ON portfolio.financials USING btree \
+            (financials_id) \
+            TABLESPACE pg_default;',
+            ]
+
+  
 create_tables = {}
 create_tables['stocks'] = stocks
 create_tables['day_prices'] = day_prices
 create_tables['inday_prices'] = inday_prices
 create_tables['dividends'] = dividends
 create_tables['ind_perf'] = ind_perf
+create_tables['financials'] = financials

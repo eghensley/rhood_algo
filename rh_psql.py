@@ -21,6 +21,9 @@ from progress_bar import progress
 import numpy as np
 
 #PSQL = db_connection('psql')
+#for script in create_tables['financials']:    
+#    PSQL.client.execute(script)
+#    PSQL.client.execute("commit;")
 #for script in create_tables['ind_perf']:    
 #    PSQL.client.execute(script)
 #    PSQL.client.execute("commit;")
@@ -177,6 +180,19 @@ def det_cur_perf(psql):
     return(current_, nxt)
 
 
+def det_cur_fin(psql):
+#    psql = PSQL
+    _data = pg_query(psql.client, 'select financials_id, rh_id, report_date from portfolio.financials')
+    if len(_data) > 0:
+        _data.rename(columns = {0:'idx', 1: 'rh_idx', 2: 'dt'}, inplace = True)
+        current_ = {i:j for i,j in pd.DataFrame(_data[['rh_idx', 'dt']].groupby('rh_idx').agg('dt').max()).reset_index().values}
+        nxt = max(_data['idx'].values) + 1
+    else:
+        current_ = {}
+        nxt = 0
+    return(current_, nxt)
+    
+    
 def inday_prices():
     print(' ~~ Intra Day Prices ~~ ')
 
@@ -328,7 +344,155 @@ def ind_perfs():
         	VALUES (%i, '%s', %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);" % (next_id, date, communication, discretionary, staples, energy, financial, health, industrial, it, material, realestate, utilities)
         pg_insert(PSQL.client, script)
 
-           
+ 
+def financials():
+    PSQL = db_connection('psql')
+    current, next_id = det_cur_fin(PSQL)
+    id_sym = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks') 
+    total_stocks = len(id_sym)
+    for stock_num, (idx, sym) in enumerate(id_sym.values):
+        progress(stock_num, total_stocks, status = sym)
+        
+        url = 'https://api.iextrading.com/1.0/stock/%s/financials' % (sym)        
+        req = requests.request('GET', url)
+        if req.status_code == 404:
+            continue
+        data = req.json()
+        if len(data) == 0:
+            continue
+        
+        for stock in reversed(data['financials']):
+            
+            report_date = datetime.strptime(stock['reportDate'], '%Y-%m-%d')
+            
+            if idx in current.keys() and current[idx] >= np.datetime64(report_date):
+                continue
+            
+            if stock['grossProfit'] is None:
+                gross_profit = 'null'
+            else:
+                gross_profit = int(stock['grossProfit'])
+                
+            if stock['costOfRevenue'] is None:
+                cost_revenue = 'null'
+            else:
+                cost_revenue = int(stock['costOfRevenue'])
+    
+            if stock['operatingRevenue'] is None:
+                operating_revenue = 'null'
+            else:
+                operating_revenue = int(stock['operatingRevenue'])
+    
+            if stock['totalRevenue'] is None:
+                total_revenue = 'null'
+            else:
+                total_revenue = int(stock['totalRevenue'])
+    
+            if stock['operatingIncome'] is None:
+                operating_income = 'null'
+            else:
+                operating_income = int(stock['operatingIncome'])
+    
+            if stock['netIncome'] is None:
+                net_income = 'null'
+            else:
+                net_income = int(stock['netIncome'])
+    
+            if stock['researchAndDevelopment'] is None:
+                r_d = 'null'
+            else:
+                r_d = int(stock['researchAndDevelopment'])
+    
+            if stock['operatingExpense'] is None:
+                operating_expense = 'null'
+            else:
+                operating_expense = int(stock['operatingExpense'])
+    
+            if stock['currentAssets'] is None:
+                current_assets = 'null'
+            else:
+                current_assets = int(stock['currentAssets'])
+    
+            if stock['totalAssets'] is None:
+                total_assets = 'null'
+            else:
+                total_assets = int(stock['totalAssets'])
+                
+            if stock['totalLiabilities'] is None:
+                total_liabilities = 'null'
+            else:
+                total_liabilities = int(stock['totalLiabilities'])
+    
+            if stock['currentCash'] is None:
+                current_cash = 'null'
+            else:
+                current_cash = int(stock['currentCash'])
+    
+            if stock['currentDebt'] is None:
+                current_debt = 'null'
+            else:
+                current_debt = int(stock['currentDebt'])
+    
+            if stock['totalCash'] is None:
+                total_cash = 'null'
+            else:
+                total_cash = int(stock['totalCash'])
+    
+            if stock['totalDebt'] is None:
+                total_debt = 'null'
+            else:
+                total_debt = int(stock['totalDebt'])
+    
+            if stock['shareholderEquity'] is None:
+                shareholder_equity = 'null'
+            else:
+                shareholder_equity = int(stock['shareholderEquity'])
+    
+            if stock['cashChange'] is None:
+                cash_change = 'null'
+            else:
+                cash_change = int(stock['cashChange'])
+         
+            if stock['cashFlow'] is None:
+                cash_flow = 'null'
+            else:
+                cash_flow = int(stock['cashFlow'])
+    
+            if stock['operatingGainsLosses'] is None:
+                operating_gl = 'null'
+            else:
+                operating_gl = int(stock['operatingGainsLosses'])
+                
+    
+            script = "INSERT INTO portfolio.financials(\
+                	financials_id, rh_id, report_date, gross_profit, cost_revenue, operating_revenue, total_revenue, operating_income, net_income, r_d, operating_expense, current_assets, total_assets, total_liabilities, current_cash, current_debt, total_cash, total_debt, shareholder_equity, cash_change, cash_flow, operating_gl)\
+                	VALUES (%i, '%s', '%s', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);" % (next_id, idx, report_date, gross_profit, cost_revenue, operating_revenue, total_revenue, operating_income, net_income, r_d, operating_expense, current_assets, total_assets, total_liabilities, current_cash, current_debt, total_cash, total_debt, shareholder_equity, cash_change, cash_flow, operating_gl)
+            pg_insert(PSQL.client, script)
+            next_id += 1
+            current[idx] = np.datetime64(report_date)
+            
+            report_date = None
+            gross_profit = None
+            cost_revenue = None
+            operating_revenue = None
+            total_revenue = None
+            operating_income = None
+            net_income = None
+            r_d = None
+            operating_expense = None
+            current_assets = None
+            total_assets = None
+            total_liabilities = None
+            current_cash = None
+            current_debt = None
+            total_cash = None
+            total_debt = None
+            shareholder_equity = None
+            cash_change = None
+            cash_flow = None
+            operating_gl = None
+
+          
 def floor_dt(dt, delta):
     return dt + (datetime.min - dt) % delta
 
@@ -347,17 +511,14 @@ def update():
         else:
             dividends()
         ind_perfs()
-    inday_prices()
-#    if next_update.hour >= 9 and next_update.hour <= 
+        financials()
+    
+    if next_update.hour >= 9 and next_update.hour <= 17:
+        inday_prices()
     
     
 if __name__ == '__main__':
     while True:
         update()
-##    dividends()
-    
-    
-
-
-
+###    dividends()
 
