@@ -142,12 +142,14 @@ def add_stock_ids():
 
 
 def det_cur_day_prices(psql, scope):
-#    psql = PSQL
-    _data = pg_query(psql.client, 'select %s_price_id, rh_id, date from portfolio.%s_prices' % (scope, scope)) 
+#    psql, scope = PSQL, 'day'
+#    _data = pg_query(psql.client, 'select %s_price_id, rh_id, date from portfolio.%s_prices' % (scope, scope)) 
+    _data = pg_query(psql.client, 'select rh_id, max(date) from portfolio.%s_prices group by rh_id' % (scope)) 
+    _nxt = pg_query(psql.client, 'select max(%s_price_id) from portfolio.%s_prices' % (scope, scope))
     if len(_data) > 0:
-        _data.rename(columns = {0:'idx', 1: 'rh_idx', 2: 'dt'}, inplace = True)
+        _data.rename(columns = {0: 'rh_idx', 1: 'dt'}, inplace = True)
         current_ = {i:j for i,j in pd.DataFrame(_data[['rh_idx', 'dt']].groupby('rh_idx').agg('dt').max()).reset_index().values}
-        nxt = max(_data['idx'].values) + 1
+        nxt = _nxt.values[0][0]+1
     else:
         current_ = {}
         nxt = 0
@@ -156,11 +158,12 @@ def det_cur_day_prices(psql, scope):
 
 def det_cur_divs(psql):
 #    psql = PSQL
-    _data = pg_query(psql.client, 'select div_id, rh_id, ex_date from portfolio.dividends')
+    _data = pg_query(psql.client, 'select rh_id, max(ex_date) from portfolio.dividends group by rh_id')
+    _nxt = pg_query(psql.client, 'select max(div_id) from portfolio.dividends')
     if len(_data) > 0:
-        _data.rename(columns = {0:'idx', 1: 'rh_idx', 2: 'dt'}, inplace = True)
+        _data.rename(columns = {0: 'rh_idx', 1: 'dt'}, inplace = True)
         current_ = {i:j for i,j in pd.DataFrame(_data[['rh_idx', 'dt']].groupby('rh_idx').agg('dt').max()).reset_index().values}
-        nxt = max(_data['idx'].values) + 1
+        nxt = _nxt.values[0][0]+1
     else:
         current_ = {}
         nxt = 0
@@ -182,11 +185,12 @@ def det_cur_perf(psql):
 
 def det_cur_fin(psql):
 #    psql = PSQL
-    _data = pg_query(psql.client, 'select financials_id, rh_id, report_date from portfolio.financials')
+    _data = pg_query(psql.client, 'select rh_id, max(report_date) from portfolio.financials group by rh_id')
+    _nxt = pg_query(psql.client, 'select max(financials_id) from portfolio.financials')
     if len(_data) > 0:
-        _data.rename(columns = {0:'idx', 1: 'rh_idx', 2: 'dt'}, inplace = True)
+        _data.rename(columns = {0: 'rh_idx', 1: 'dt'}, inplace = True)
         current_ = {i:j for i,j in pd.DataFrame(_data[['rh_idx', 'dt']].groupby('rh_idx').agg('dt').max()).reset_index().values}
-        nxt = max(_data['idx'].values) + 1
+        nxt = _nxt.values[0][0]+1
     else:
         current_ = {}
         nxt = 0
@@ -209,6 +213,8 @@ def inday_prices():
                     'span' : 'week',
                     'bounds' : 'regular'}
         data = helper.request_get(url,'results',payload)
+        if data == [None]:
+            continue
         for day in data[0]['historicals']:  
             beg_date = datetime.strptime(day['begins_at'].replace('Z', '').replace('T', ' '), '%Y-%m-%d %H:%M:%S')
             if idx in current.keys() and beg_date <= current[idx]:
@@ -245,6 +251,9 @@ def day_prices():
                     'span' : '5year',
                     'bounds' : 'regular'}
         data = helper.request_get(url,'results',payload)
+        
+        if data == [None]:
+            continue
         for day in data[0]['historicals']:
             beg_date = datetime.strptime(day['begins_at'].replace('Z', '').replace('T', ' '), '%Y-%m-%d %H:%M:%S')
             if idx in current.keys() and beg_date <= current[idx]:
@@ -520,5 +529,5 @@ def update():
 if __name__ == '__main__':
     while True:
         update()
-###    dividends()
+##    dividends()
 
