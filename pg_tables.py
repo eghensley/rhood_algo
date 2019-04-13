@@ -175,6 +175,139 @@ financials = ['DROP TABLE IF EXISTS portfolio.financials;',
             TABLESPACE pg_default;',
             ]
 
+#day_ma = ['DROP TABLE IF EXISTS portfolio.day_ma;',
+#           
+#           'CREATE TABLE portfolio.day_ma \
+#            (day_ma_id bigint NOT NULL, \
+#            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+#            date timestamp NOT NULL, \
+#            period int NOT NULL, \
+#            avg_price float NOT NULL, \
+#            CONSTRAINT day_ma_uq UNIQUE (date, rh_id, period), \
+#            CONSTRAINT day_ma_pkey PRIMARY KEY (day_ma_id), \
+#            CONSTRAINT day_ma_fk FOREIGN KEY (rh_id) \
+#            REFERENCES portfolio.stocks (rh_id)) \
+#            WITH (OIDS = FALSE) \
+#            TABLESPACE pg_default;'
+#            
+#            'DROP INDEX IF EXISTS portfolio.day_ma_idx;',
+#            'CREATE INDEX day_ma_idx \
+#            ON portfolio.day_ma USING btree \
+#            (day_ma_id) \
+#            TABLESPACE pg_default;',
+#            ]
+
+
+ma_day_10 = ['DROP TABLE IF EXISTS portfolio.ma_day_10;',
+           
+           'CREATE TABLE portfolio.ma_day_10 \
+            (ma_day_10_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            avg_price float NOT NULL, \
+            CONSTRAINT ma_day_10_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT ma_day_10_pkey PRIMARY KEY (ma_day_10_id), \
+            CONSTRAINT ma_day_10_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ma_day_10_idx;',
+            'CREATE INDEX ma_day_10_idx \
+            ON portfolio.ma_day_10 USING btree \
+            (ma_day_10_id) \
+            TABLESPACE pg_default;',
+            ]
+
+ma_day_20 = ['DROP TABLE IF EXISTS portfolio.ma_day_20;',
+           
+           'CREATE TABLE portfolio.ma_day_20 \
+            (ma_day_20_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            avg_price float NOT NULL, \
+            CONSTRAINT ma_day_20_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT ma_day_20_pkey PRIMARY KEY (ma_day_20_id), \
+            CONSTRAINT ma_day_20_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ma_day_20_idx;',
+            'CREATE INDEX ma_day_20_idx \
+            ON portfolio.ma_day_20 USING btree \
+            (ma_day_20_id) \
+            TABLESPACE pg_default;',
+            ]
+
+ma_day_50 = ['DROP TABLE IF EXISTS portfolio.ma_day_50;',
+           
+           'CREATE TABLE portfolio.ma_day_50 \
+            (ma_day_50_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            avg_price float NOT NULL, \
+            CONSTRAINT ma_day_50_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT ma_day_50_pkey PRIMARY KEY (ma_day_50_id), \
+            CONSTRAINT ma_day_50_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ma_day_50_idx;',
+            'CREATE INDEX ma_day_50_idx \
+            ON portfolio.ma_day_50 USING btree \
+            (ma_day_50_id) \
+            TABLESPACE pg_default;',
+            ]
+
+ma_day_100 = ['DROP TABLE IF EXISTS portfolio.ma_day_100;',
+           
+           'CREATE TABLE portfolio.ma_day_100 \
+            (ma_day_100_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            avg_price float NOT NULL, \
+            CONSTRAINT ma_day_100_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT ma_day_100_pkey PRIMARY KEY (ma_day_100_id), \
+            CONSTRAINT ma_day_100_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ma_day_100_idx;',
+            'CREATE INDEX ma_day_100_idx \
+            ON portfolio.ma_day_100 USING btree \
+            (ma_day_100_id) \
+            TABLESPACE pg_default;',
+            ]
+
+ma_day_200 = ['DROP TABLE IF EXISTS portfolio.ma_day_200;',
+           
+           'CREATE TABLE portfolio.ma_day_200 \
+            (ma_day_200_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            avg_price float NOT NULL, \
+            CONSTRAINT ma_day_200_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT ma_day_200_pkey PRIMARY KEY (ma_day_200_id), \
+            CONSTRAINT ma_day_200_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ma_day_200_idx;',
+            'CREATE INDEX ma_day_200_idx \
+            ON portfolio.ma_day_200 USING btree \
+            (ma_day_200_id) \
+            TABLESPACE pg_default;',
+            ]
+
   
 create_tables = {}
 create_tables['stocks'] = stocks
@@ -183,3 +316,9 @@ create_tables['inday_prices'] = inday_prices
 create_tables['dividends'] = dividends
 create_tables['ind_perf'] = ind_perf
 create_tables['financials'] = financials
+#create_tables['day_ma'] = day_ma
+create_tables['ma_day_10'] = ma_day_10
+create_tables['ma_day_20'] = ma_day_20
+create_tables['ma_day_50'] = ma_day_50
+create_tables['ma_day_100'] = ma_day_100
+create_tables['ma_day_200'] = ma_day_200
