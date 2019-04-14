@@ -308,6 +308,70 @@ ma_day_200 = ['DROP TABLE IF EXISTS portfolio.ma_day_200;',
             TABLESPACE pg_default;',
             ]
 
+ema_day_12 = ['DROP TABLE IF EXISTS portfolio.ema_day_12;',
+           
+           'CREATE TABLE portfolio.ema_day_12 \
+            (ema_day_12_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            avg_price float NOT NULL, \
+            CONSTRAINT ema_day_12_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT ema_day_12_pkey PRIMARY KEY (ema_day_12_id), \
+            CONSTRAINT ema_day_12_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ema_day_12_idx;',
+            'CREATE INDEX ema_day_12_idx \
+            ON portfolio.ema_day_12 USING btree \
+            (ema_day_12_id) \
+            TABLESPACE pg_default;',
+            ]
+
+ema_day_26 = ['DROP TABLE IF EXISTS portfolio.ema_day_26;',
+           
+           'CREATE TABLE portfolio.ema_day_26 \
+            (ema_day_26_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            avg_price float NOT NULL, \
+            CONSTRAINT ema_day_26_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT ema_day_26_pkey PRIMARY KEY (ema_day_26_id), \
+            CONSTRAINT ema_day_26_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ema_day_26_idx;',
+            'CREATE INDEX ema_day_26_idx \
+            ON portfolio.ema_day_26 USING btree \
+            (ema_day_26_id) \
+            TABLESPACE pg_default;',
+            ]
+
+sto_osc_14 = ['DROP TABLE IF EXISTS portfolio.sto_osc_14;',
+           
+           'CREATE TABLE portfolio.sto_osc_14 \
+            (sto_osc_14_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            k float NOT NULL, \
+            CONSTRAINT sto_osc_14_uq UNIQUE (date, rh_id), \
+            CONSTRAINT sto_osc_14_pkey PRIMARY KEY (sto_osc_14_id), \
+            CONSTRAINT sto_osc_14_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ema_day_26_idx;',
+            'CREATE INDEX sto_osc_14_idx \
+            ON portfolio.sto_osc_14 USING btree \
+            (sto_osc_14_id) \
+            TABLESPACE pg_default;',
+            ]
   
 create_tables = {}
 create_tables['stocks'] = stocks
@@ -322,3 +386,6 @@ create_tables['ma_day_20'] = ma_day_20
 create_tables['ma_day_50'] = ma_day_50
 create_tables['ma_day_100'] = ma_day_100
 create_tables['ma_day_200'] = ma_day_200
+create_tables['ema_day_12'] = ema_day_12
+create_tables['ema_day_26'] = ema_day_26
+create_tables['sto_osc_14'] = sto_osc_14
