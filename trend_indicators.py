@@ -62,15 +62,22 @@ def det_cur_ema(psql):
     return(_nxt_ids, _comp_cur)    
 
 
-def moving_average(data, comp_idx, comp_name_conv):
+def moving_average(comp_idx, comp_name_conv):
+#    comp_idx, comp_name_conv = COMP_IDX, COMP_NAME_CONV
+    
+    cur_date = pg_query(PSQL.client, "SELECT max(date) FROM portfolio.day_prices;")[0].values[0]
     all_next_id, all_comp_cur = det_cur_ma(PSQL)
     total_stocks = len(comp_idx)
     for stock_num, (rh_id) in enumerate(comp_idx):
         progress(stock_num, total_stocks, status = comp_name_conv[rh_id])
-        comp_data = data.loc[data['rh_id'] == rh_id]
-        comp_data.sort_values('date', ascending = True)
-        date_idx = comp_data['date']
         for period in [200, 100, 50, 20, 10]:
+            if rh_id in all_comp_cur[period].keys() and cur_date <= np.datetime64(all_comp_cur[period][rh_id]):
+                continue
+            
+            comp_data = pg_query(PSQL.client, "SELECT date, close_price FROM portfolio.day_prices where rh_id = '%s';" % (rh_id))
+            comp_data.rename(columns = {0:'date', 1:'close_price'}, inplace = True)
+            comp_data.sort_values('date', ascending = True)
+            date_idx = comp_data['date']
             dma = calc_mov_avg(comp_data, period)
             
             for date, avg_price in zip(date_idx.values, dma.values):
@@ -84,25 +91,45 @@ def moving_average(data, comp_idx, comp_name_conv):
                 all_comp_cur[period][rh_id] = date
 
 
-def exp_moving_average(data, comp_idx, comp_name_conv):
-#    data, comp_idx, comp_name_conv = DATA, COMP_IDX, COMP_NAME_CONV
+def exp_moving_average(comp_idx, comp_name_conv):
+#    comp_idx, comp_name_conv = COMP_IDX, COMP_NAME_CONV
     
+    cur_date = pg_query(PSQL.client, "SELECT max(date) FROM portfolio.day_prices;")[0].values[0]
     all_next_id, all_comp_cur = det_cur_ema(PSQL)
     total_stocks = len(comp_idx)
     for stock_num, (rh_id) in enumerate(comp_idx):
         progress(stock_num, total_stocks, status = comp_name_conv[rh_id])
-        comp_data = data.loc[data['rh_id'] == rh_id]
-        comp_data.sort_values('date', ascending = True)
         for period in [12, 26]:
+            if rh_id in all_comp_cur[period].keys() and cur_date <= np.datetime64(all_comp_cur[period][rh_id]):
+                continue
+            
             weighting_mult = 2/(period+1)
             emas = []
             dates = []
-            emas.append(comp_data.iloc[:period]['close_price'].mean())
-            dates.append(comp_data.iloc[period]['date'])
-            comp_data = comp_data.iloc[period+1:]
-            for nxt_val, nxt_date in comp_data[['close_price', 'date']].values:
-                emas.append((nxt_val - emas[-1]) * weighting_mult + emas[-1])
-                dates.append(nxt_date)
+            
+            if rh_id in all_comp_cur[period].keys():
+                missing_days = pg_query(PSQL.client, "SELECT date, close_price FROM portfolio.day_prices where rh_id = '%s' and date > '%s';" % (rh_id, all_comp_cur[period][rh_id]))
+                if len(missing_days) == 0:
+                    continue
+                missing_days.rename(columns = {0:'date', 1:'close_price'}, inplace = True)
+                start_ema = pg_query(PSQL.client, "SELECT date, avg_price FROM portfolio.ema_day_%s where rh_id = '%s' and date = '%s';" % (period, rh_id, all_comp_cur[period][rh_id]))
+                
+                emas.append(start_ema[1].values[0])
+                dates.append(start_ema[0].values[0])
+                for nxt_val, nxt_date in missing_days[['close_price', 'date']].values:
+                    emas.append((nxt_val - emas[-1]) * weighting_mult + emas[-1])
+                    dates.append(nxt_date)
+            else:
+                comp_data = pg_query(PSQL.client, "SELECT date, close_price FROM portfolio.day_prices where rh_id = '%s';" % (rh_id))
+                comp_data.rename(columns = {0:'date', 1:'close_price'}, inplace = True)
+                comp_data.sort_values('date', ascending = True)
+                
+                emas.append(comp_data.iloc[:period]['close_price'].mean())
+                dates.append(comp_data.iloc[period]['date'])
+                comp_data = comp_data.iloc[period+1:]
+                for nxt_val, nxt_date in comp_data[['close_price', 'date']].values:
+                    emas.append((nxt_val - emas[-1]) * weighting_mult + emas[-1])
+                    dates.append(nxt_date)
                 
             for date, avg_price in zip(dates, emas):
                 if rh_id in all_comp_cur[period].keys() and date <= np.datetime64(all_comp_cur[period][rh_id]):
@@ -117,11 +144,9 @@ def exp_moving_average(data, comp_idx, comp_name_conv):
 
 if __name__ == '__main__':
     PSQL = db_connection('psql')
-    DATA = pg_query(PSQL.client, "SELECT rh_id, date, close_price FROM portfolio.day_prices;")
-    DATA.rename(columns = {0 :'rh_id', 1:'date', 2:'close_price'}, inplace = True)
-    COMP_IDX = DATA['rh_id'].drop_duplicates().values
+    COMP_IDX = [i[0] for i in pg_query(PSQL.client, "SELECT rh_id FROM portfolio.stocks;").values]
     COMP_NAME_CONV = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
     COMP_NAME_CONV = {k:v for k,v in COMP_NAME_CONV.values}
 
-    moving_average(DATA, COMP_IDX, COMP_NAME_CONV)
-    exp_moving_average(DATA, COMP_IDX, COMP_NAME_CONV)
+    moving_average(COMP_IDX, COMP_NAME_CONV)
+    exp_moving_average(COMP_IDX, COMP_NAME_CONV)

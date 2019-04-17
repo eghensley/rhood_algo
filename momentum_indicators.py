@@ -32,14 +32,28 @@ def det_cur_ma(psql):
     return(_nxt_ids, _comp_cur)
 
 
-def stoch_osc_k(data, comp_idx, comp_name_conv):
-#    data, comp_idx, comp_name_conv = DATA, COMP_IDX, COMP_NAME_CONV
+def stoch_osc_k(comp_idx, comp_name_conv):
+#    comp_idx, comp_name_conv = COMP_IDX, COMP_NAME_CONV
 #    all_next_id, all_comp_cur = det_cur_ema(PSQL)
+
+    cur_date = pg_query(PSQL.client, "SELECT max(date) FROM portfolio.sto_osc_14;")[0].values[0]
+
     total_stocks = len(comp_idx)
     nxt_id, comp_cur = det_cur_ma(PSQL)
     for stock_num, (rh_id) in enumerate(comp_idx):
         progress(stock_num, total_stocks, status = comp_name_conv[rh_id])
-        comp_data = data.loc[data['rh_id'] == rh_id]
+        
+        if rh_id in comp_cur.keys() and cur_date <= np.datetime64(comp_cur[rh_id]):
+            continue
+        
+        
+#        if rh_id in comp_cur.keys():
+#            missing_days = pg_query(PSQL.client, "SELECT date, close_price FROM portfolio.day_prices where rh_id = '%s' and date > '%s';" % (rh_id, all_comp_cur[period][rh_id]))
+#            if len(missing_days) == 0:
+#                continue            
+#        else:
+        comp_data = pg_query(PSQL.client, "SELECT date, close_price FROM portfolio.day_prices where rh_id = '%s';" % (rh_id))
+        comp_data.rename(columns = {0:'date', 1:'close_price'}, inplace = True)
         comp_data.sort_values('date', ascending = True)
         
         per_high = comp_data['close_price'].rolling(window=14).max()
@@ -56,16 +70,23 @@ def stoch_osc_k(data, comp_idx, comp_name_conv):
             pg_insert(PSQL.client, script)
             nxt_id += 1   
             comp_cur[rh_id] = date
+            
         
         
 if __name__ == '__main__':
     PSQL = db_connection('psql')
-    DATA = pg_query(PSQL.client, "SELECT rh_id, date, close_price FROM portfolio.day_prices;")
-    DATA.rename(columns = {0 :'rh_id', 1:'date', 2:'close_price'}, inplace = True)
-    COMP_IDX = DATA['rh_id'].drop_duplicates().values
+    
+    COMP_IDX = [i[0] for i in pg_query(PSQL.client, "SELECT rh_id FROM portfolio.stocks;").values]
     COMP_NAME_CONV = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
     COMP_NAME_CONV = {k:v for k,v in COMP_NAME_CONV.values}
-    stoch_osc_k(DATA, COMP_IDX, COMP_NAME_CONV)
+    
+    
+#    DATA = pg_query(PSQL.client, "SELECT rh_id, date, close_price FROM portfolio.day_prices;")
+#    DATA.rename(columns = {0 :'rh_id', 1:'date', 2:'close_price'}, inplace = True)
+#    COMP_IDX = DATA['rh_id'].drop_duplicates().values
+#    COMP_NAME_CONV = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
+#    COMP_NAME_CONV = {k:v for k,v in COMP_NAME_CONV.values}
+    stoch_osc_k(COMP_IDX, COMP_NAME_CONV)
 
 
         

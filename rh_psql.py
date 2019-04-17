@@ -243,6 +243,8 @@ def day_prices():
     id_sym = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
     total_stocks = len(id_sym)
     for stock_num, (idx, sym) in enumerate(id_sym.values):
+#        if idx == '1d4d0780-ba27-4adc-ab12-0c3062fdf365':
+#            asdfasdf
         progress(stock_num, total_stocks, status = sym)
         symbols = helper.inputs_to_set(sym)
         url = urls.historicals()
@@ -525,9 +527,12 @@ def update():
     if next_update.hour >= 9 and next_update.hour <= 17:
         inday_prices()
     
-    
 if __name__ == '__main__':
-    while True:
-        update()
+#    while True:
+#        update()
 ##    dividends()
-
+        day_prices()
+#        dividends()
+        ind_perfs()
+        financials()
+        inday_prices()
