@@ -372,6 +372,28 @@ sto_osc_14 = ['DROP TABLE IF EXISTS portfolio.sto_osc_14;',
             (sto_osc_14_id) \
             TABLESPACE pg_default;',
             ]
+
+cci_day_20 = ['DROP TABLE IF EXISTS portfolio.cci_day_20;',
+           
+           'CREATE TABLE portfolio.cci_day_20 \
+            (cci_day_20_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            period int NOT NULL, \
+            cci float NOT NULL, \
+            CONSTRAINT cci_day_20_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT cci_day_20_pkey PRIMARY KEY (cci_day_20_id), \
+            CONSTRAINT cci_day_20_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.ma_day_20_idx;',
+            'CREATE INDEX cci_day_20_idx \
+            ON portfolio.cci_day_20 USING btree \
+            (cci_day_20_id) \
+            TABLESPACE pg_default;',
+            ]
   
 create_tables = {}
 create_tables['stocks'] = stocks
@@ -389,3 +411,4 @@ create_tables['ma_day_200'] = ma_day_200
 create_tables['ema_day_12'] = ema_day_12
 create_tables['ema_day_26'] = ema_day_26
 create_tables['sto_osc_14'] = sto_osc_14
+create_tables['cci_day_20'] = cci_day_20
