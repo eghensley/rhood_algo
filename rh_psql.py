@@ -11,7 +11,7 @@ sys.path.insert(1, os.path.join(cur_path, 'lib', 'python3.7', 'site-packages'))
 
 import requests
 import pandas as pd
-from _connections import db_connection, openfigi_key
+from _connections import db_connection, openfigi_key, rs
 from pg_tables import create_tables
 from datetime import datetime, timedelta
 import robin_stocks.helper as helper
@@ -19,31 +19,6 @@ import robin_stocks.urls as urls
 import time as tm
 from progress_bar import progress
 import numpy as np
-
-#PSQL = db_connection('psql')
-#for script in create_tables['financials']:    
-#    PSQL.client.execute(script)
-#    PSQL.client.execute("commit;")
-#for script in create_tables['ind_perf']:    
-#    PSQL.client.execute(script)
-#    PSQL.client.execute("commit;")
-#for script in create_tables['dividends']:    
-#    PSQL.client.execute(script)
-#    PSQL.client.execute("commit;")
-#for script in stocks:
-#    PSQL.client.execute(script)
-#    PSQL.client.execute("commit;")  
-#for script in create_tables['stocks']:
-#    PSQL.client.execute(script)
-#    PSQL.client.execute("commit;")
-#for script in create_tables['day_prices']:
-#    PSQL.client.execute(script)
-#    PSQL.client.execute("commit;")
-#for script in create_tables['inday_prices']:    
-#    PSQL.client.execute(script)
-#    PSQL.client.execute("commit;")
-
-
 
     
 def pg_create_table(cur, table_name):  
@@ -204,6 +179,9 @@ def inday_prices():
     current, next_id = det_cur_day_prices(PSQL, 'inday')
     id_sym = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
     total_stocks = len(id_sym)
+    trader = rs()
+    login_data = trader.login()
+        
     for stock_num, (idx, sym) in enumerate(id_sym.values):
         progress(stock_num, total_stocks, status = sym)
         symbols = helper.inputs_to_set(sym)
@@ -212,7 +190,9 @@ def inday_prices():
                     'interval' : '10minute',
                     'span' : 'week',
                     'bounds' : 'regular'}
-        data = helper.request_get(url,'results',payload)
+#        data = helper.request_get(url,'results',payload)
+        data = trader.request_get(url,'results',payload)
+
         if data == [None]:
             continue
         for day in data[0]['historicals']:  
@@ -242,6 +222,9 @@ def day_prices():
     current, next_id = det_cur_day_prices(PSQL, 'day')
     id_sym = pg_query(PSQL.client, 'select rh_id, rh_sym from portfolio.stocks')
     total_stocks = len(id_sym)
+    trader = rs()
+    login_data = trader.login()
+        
     for stock_num, (idx, sym) in enumerate(id_sym.values):
 #        if idx == '1d4d0780-ba27-4adc-ab12-0c3062fdf365':
 #            asdfasdf
@@ -252,7 +235,7 @@ def day_prices():
                     'interval' : 'day',
                     'span' : '5year',
                     'bounds' : 'regular'}
-        data = helper.request_get(url,'results',payload)
+        data = trader.request_get(url,'results',payload)
         
         if data == [None]:
             continue
@@ -274,7 +257,7 @@ def day_prices():
             high_price = None
             low_price = None
             volume = None
-
+    trader.logout()
 
 #Use the /ref-data/symbols endpoint to find the symbols that we support. 
 #id_sym.loc[id_sym[0] == 'c850bc5d-676b-47d3-8f47-d0ce7676ccdf']
@@ -509,30 +492,32 @@ def floor_dt(dt, delta):
 
 
 def update():
-    next_update = floor_dt(datetime.now(), timedelta(minutes=10))
+#    next_update = floor_dt(datetime.now(), timedelta(minutes=10))
 #    next_update = floor_dt(datetime.now(), timedelta(days=1))
-    dt_until_update = next_update - datetime.now()
-    seconds_before_update = dt_until_update.total_seconds()
-    tm.sleep(seconds_before_update)
+#    dt_until_update = next_update - datetime.now()
+#    seconds_before_update = dt_until_update.total_seconds()
+#    tm.sleep(seconds_before_update)
     print('BEGINNING UPDATE')
-    if next_update.hour == 0 and next_update.minute == 0:
-        day_prices()
-        if next_update.day == 1 or next_update.day == 15:
-            dividends(full_update = True)
-        else:
-            dividends()
-        ind_perfs()
-        financials()
-    
-    if next_update.hour >= 9 and next_update.hour <= 17:
-        inday_prices()
-    
+    inday_prices()
+    ind_perfs()
+#    if next_update.hour == 0 and next_update.minute == 0:
+    day_prices()
+#        if next_update.day == 1 or next_update.day == 15:
+#            dividends(full_update = True)
+#        else:
+#            dividends()
+#        ind_perfs()
+#        financials()
+#    if next_update.hour >= 9 and next_update.hour <= 17:
+#        inday_prices()
+
+
 if __name__ == '__main__':
 #    while True:
-#        update()
+        update()
 ##    dividends()
-        day_prices()
+#        day_prices()
 #        dividends()
-        ind_perfs()
-        financials()
-        inday_prices()
+#        ind_perfs()
+#        financials()
+#        inday_prices()

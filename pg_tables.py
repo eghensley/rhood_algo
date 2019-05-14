@@ -379,22 +379,130 @@ cci_day_20 = ['DROP TABLE IF EXISTS portfolio.cci_day_20;',
             (cci_day_20_id bigint NOT NULL, \
             rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
             date timestamp NOT NULL, \
-            period int NOT NULL, \
             cci float NOT NULL, \
-            CONSTRAINT cci_day_20_uq UNIQUE (date, rh_id, period), \
+            CONSTRAINT cci_day_20_uq UNIQUE (date, rh_id), \
             CONSTRAINT cci_day_20_pkey PRIMARY KEY (cci_day_20_id), \
             CONSTRAINT cci_day_20_fk FOREIGN KEY (rh_id) \
             REFERENCES portfolio.stocks (rh_id)) \
             WITH (OIDS = FALSE) \
             TABLESPACE pg_default;'
             
-            'DROP INDEX IF EXISTS portfolio.ma_day_20_idx;',
+            'DROP INDEX IF EXISTS portfolio.cci_day_20_idx;',
             'CREATE INDEX cci_day_20_idx \
             ON portfolio.cci_day_20 USING btree \
             (cci_day_20_id) \
             TABLESPACE pg_default;',
             ]
-  
+
+
+rsi_day_14 = ['DROP TABLE IF EXISTS portfolio.rsi_day_14;',
+           
+           'CREATE TABLE portfolio.rsi_day_14 \
+            (rsi_day_14_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            rsi float NOT NULL, \
+            CONSTRAINT rsi_day_14_uq UNIQUE (date, rh_id), \
+            CONSTRAINT rsi_day_14_pkey PRIMARY KEY (rsi_day_14_id), \
+            CONSTRAINT rsi_day_14_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.rsi_day_14_idx;',
+            'CREATE INDEX rsi_day_14_idx \
+            ON portfolio.rsi_day_14 USING btree \
+            (rsi_day_14_id) \
+            TABLESPACE pg_default;',
+            ]
+
+sd_day_20 = ['DROP TABLE IF EXISTS portfolio.sd_day_20;',
+           
+           'CREATE TABLE portfolio.sd_day_20 \
+            (sd_day_20_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            sd float NOT NULL, \
+            CONSTRAINT sd_day_20_uq UNIQUE (date, rh_id), \
+            CONSTRAINT sd_day_20_pkey PRIMARY KEY (sd_day_20_id), \
+            CONSTRAINT sd_day_20_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.sd_day_20_idx;',
+            'CREATE INDEX sd_day_20_idx \
+            ON portfolio.sd_day_20 USING btree \
+            (sd_day_20_id) \
+            TABLESPACE pg_default;',
+            ]
+
+
+adl_day = ['DROP TABLE IF EXISTS portfolio.adl_day;',
+           
+           'CREATE TABLE portfolio.adl_day \
+            (adl_day_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            adl float NOT NULL, \
+            CONSTRAINT adl_day_uq UNIQUE (date, rh_id), \
+            CONSTRAINT adl_day_pkey PRIMARY KEY (adl_day_id), \
+            CONSTRAINT adl_day_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.adl_day_idx;',
+            'CREATE INDEX adl_day_idx \
+            ON portfolio.adl_day USING btree \
+            (adl_day_id) \
+            TABLESPACE pg_default;',
+            ]
+
+
+day_chaikin = ['DROP TABLE IF EXISTS portfolio.day_chaikin;',
+           
+           'CREATE TABLE portfolio.day_chaikin \
+            (day_chaikin_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            chaikin float NOT NULL, \
+            CONSTRAINT day_chaikin_uq UNIQUE (date, rh_id), \
+            CONSTRAINT day_chaikin_pkey PRIMARY KEY (day_chaikin_id), \
+            CONSTRAINT day_chaikin_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.day_chaikin_idx;',
+            'CREATE INDEX day_chaikin_idx \
+            ON portfolio.day_chaikin USING btree \
+            (day_chaikin_id) \
+            TABLESPACE pg_default;',
+            ]
+
+
+obv_14_roc = ['DROP TABLE IF EXISTS portfolio.obv_14_roc;',
+           
+           'CREATE TABLE portfolio.obv_14_roc \
+            (obv_14_roc_id bigint NOT NULL, \
+            rh_id varchar COLLATE pg_catalog."default" NOT NULL, \
+            date timestamp NOT NULL, \
+            obv_roc float NOT NULL, \
+            CONSTRAINT obv_14_roc_uq UNIQUE (date, rh_id), \
+            CONSTRAINT obv_14_roc_pkey PRIMARY KEY (obv_14_roc_id), \
+            CONSTRAINT obv_14_roc_fk FOREIGN KEY (rh_id) \
+            REFERENCES portfolio.stocks (rh_id)) \
+            WITH (OIDS = FALSE) \
+            TABLESPACE pg_default;'
+            
+            'DROP INDEX IF EXISTS portfolio.obv_14_roc_idx;',
+            'CREATE INDEX obv_14_roc_idx \
+            ON portfolio.obv_14_roc USING btree \
+            (obv_14_roc_id) \
+            TABLESPACE pg_default;',
+            ]
+
 create_tables = {}
 create_tables['stocks'] = stocks
 create_tables['day_prices'] = day_prices
@@ -412,3 +520,8 @@ create_tables['ema_day_12'] = ema_day_12
 create_tables['ema_day_26'] = ema_day_26
 create_tables['sto_osc_14'] = sto_osc_14
 create_tables['cci_day_20'] = cci_day_20
+create_tables['rsi_day_14'] = rsi_day_14
+create_tables['sd_day_20'] = sd_day_20
+create_tables['adl_day'] = adl_day
+create_tables['day_chaikin'] = day_chaikin
+create_tables['obv_14_roc'] = obv_14_roc
